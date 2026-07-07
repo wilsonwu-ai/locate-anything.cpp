@@ -76,6 +76,10 @@ cmake -B build -DLA_BUILD_TESTS=ON -DLA_BUILD_CLI=ON && cmake --build build -j
 | `LA_GGML_CUDA`   | OFF | Forward `GGML_CUDA` to the submodule |
 | `LA_GGML_METAL`  | OFF | Forward `GGML_METAL` to the submodule |
 | `LA_GGML_VULKAN` | OFF | Forward `GGML_VULKAN` to the submodule |
+| `LA_GGML_CANN`   | OFF | Forward `GGML_CANN` to the submodule (Huawei Ascend NPU) |
+
+For Ascend NPU builds, packaging, and the f16-only caveat, see
+[`docs/ASCEND_NPU.md`](docs/ASCEND_NPU.md).
 
 ## Models
 

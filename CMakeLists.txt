@@ -15,6 +15,7 @@ option(LA_SHARED         "Build liblocate_anything as a shared library"    OFF)
 option(LA_GGML_CUDA      "ggml CUDA backend"      OFF)
 option(LA_GGML_METAL     "ggml Metal backend"     OFF)
 option(LA_GGML_VULKAN    "ggml Vulkan backend"    OFF)
+option(LA_GGML_CANN      "ggml CANN backend (Ascend NPU)" OFF)
 
 set(GGML_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
 set(GGML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -28,6 +29,7 @@ set(BUILD_SHARED_LIBS   OFF CACHE BOOL "" FORCE)
 set(GGML_CUDA   ${LA_GGML_CUDA}   CACHE BOOL "" FORCE)
 set(GGML_METAL  ${LA_GGML_METAL}  CACHE BOOL "" FORCE)
 set(GGML_VULKAN ${LA_GGML_VULKAN} CACHE BOOL "" FORCE)
+set(GGML_CANN   ${LA_GGML_CANN}   CACHE BOOL "" FORCE)
 add_subdirectory(third_party/ggml EXCLUDE_FROM_ALL)
 
 # ---------- liblocate_anything ----------

@@ -12,3 +12,5 @@ __pycache__/
 # published clips live in benchmarks/media/)
 /benchmarks/demo/out/
 /benchmarks/media/_tmp.json
+servers.json
+docker-compose.npu.yml

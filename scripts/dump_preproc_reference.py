@@ -65,6 +65,9 @@ def main():
 
     img = Image.open(IMAGE_PATH).convert("RGB")
     print(f"image {IMAGE_PATH} size(w,h)={img.size}")
+    # Boxes denormalize against the ORIGINAL image dims (reference convention),
+    # not the padded target canvas.
+    orig_w, orig_h = img.size
 
     # =================== Manual _preprocess (capture resized_chw) ===========
     # Mirror LocateAnythingImageProcessor._preprocess exactly:
@@ -170,8 +173,8 @@ def main():
             if len(coords) == 4:
                 x1, y1, x2, y2 = coords  # x1,y1,x2,y2
                 boxes.append([
-                    x1 / 1000 * target_w, y1 / 1000 * target_h,
-                    x2 / 1000 * target_w, y2 / 1000 * target_h,
+                    x1 / 1000 * orig_w, y1 / 1000 * orig_h,
+                    x2 / 1000 * orig_w, y2 / 1000 * orig_h,
                 ])
                 labels.append(cur_label)
             i = j + 1

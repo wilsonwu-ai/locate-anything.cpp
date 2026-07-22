@@ -48,8 +48,8 @@ def time_upstream(device):
     if device == "cuda": torch.cuda.synchronize()
     dt = time.time() - t0
     ids = tok(s, add_special_tokens=False)["input_ids"]
-    g = inputs["image_grid_hws"][0].tolist()
-    boxes = _dedup(parse_boxes_from_ids(ids, g[1]*14, g[0]*14))
+    from PIL import Image
+    boxes = _dedup(parse_boxes_from_ids(ids, *Image.open(IMG).size))  # ORIGINAL dims
     del model; torch.cuda.empty_cache() if device == "cuda" else None
     return round(dt, 2), len(ids), boxes
 

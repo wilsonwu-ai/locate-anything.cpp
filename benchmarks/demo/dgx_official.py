@@ -109,7 +109,8 @@ def measure_upstream(model, tok, proc, images):
     res = {}
     for img, cats in images:
         inputs = up_inputs(proc, img, cats)
-        g = inputs["image_grid_hws"][0].tolist(); tw, th = g[1]*14, g[0]*14
+        from PIL import Image as _PILImage
+        tw, th = _PILImage.open(img).size  # ORIGINAL dims (reference convention)
         # --- greedy (deterministic; parity + fair-work timing, max_new=256) ---
         s = gen_call(model, tok, inputs, max_new_tokens=256, do_sample=False); torch.cuda.synchronize()
         tg = []

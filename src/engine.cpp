@@ -74,9 +74,11 @@ std::vector<Box> Engine::locate_image(const Image& img, const std::string& query
                                                /*early_stop=*/!std::getenv("LA_NO_EARLYSTOP"));
     if(!ok) return empty;
 
-    // 6) parse boxes. Coords denormalize against the preprocessed target size
-    //    (img_w = target_w = gw*14, img_h = target_h = gh*14).
-    return parse_boxes(gen_ids, P.target_w, P.target_h,
+    // 6) parse boxes. Coords denormalize against the ORIGINAL image dims — the
+    //    reference implementation projects <0>..<1000> tokens onto image.size,
+    //    not the padded/downscaled preprocess canvas (which overshoots by up to
+    //    one 28px pad and can exceed the image bounds).
+    return parse_boxes(gen_ids, img.w, img.h,
                        [&](const std::vector<int32_t>& t){ return tok_.decode(t); });
 }
 

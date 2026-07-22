@@ -17,7 +17,8 @@ How it stays loyal to upstream:
   * Boxes are parsed from upstream's generated token stream with the SAME
     token-id -> coord -> pixel logic as ``dump_slow_reference.py`` (which our
     C++ ``boxes.cpp`` is gated to reproduce). Both sides denormalize against the
-    preprocessed grid size (gw*14 x gh*14), so the comparison is apples-to-apples.
+    ORIGINAL image size — the reference convention (the model card demo projects
+    <0>..<1000> onto image.size) — so the comparison is apples-to-apples.
   * Both sides use ``max_new_tokens=256`` (the C++ engine/CLI default) so the
     hybrid degenerate tail is the same length on both.
 
@@ -99,7 +100,7 @@ def build_inputs_for(model_bundle, image_path, prompt, device="cpu"):
 
 
 def parse_boxes_from_ids(ids, img_w, img_h):
-    """Token-id -> [(label, [x1,y1,x2,y2]) ...] in grid-pixel space.
+    """Token-id -> [(label, [x1,y1,x2,y2]) ...] in original-image pixel space.
     Identical logic to dump_slow_reference.py / src/boxes.cpp (x1,y1,x2,y2)."""
     boxes, i, n, cur_label = [], 0, len(ids), ""
     while i < n:
@@ -141,8 +142,7 @@ def upstream_boxes(model_bundle, image_path, prompt, mode, max_new=256):
             attention_mask=inputs["attention_mask"], image_grid_hws=inputs["image_grid_hws"],
             tokenizer=tok, max_new_tokens=max_new, generation_mode=mode, use_cache=True)
     ids = tok(s, add_special_tokens=False)["input_ids"]
-    grid = inputs["image_grid_hws"][0].tolist()
-    img_w, img_h = grid[1] * 14, grid[0] * 14   # grid = [h_patches, w_patches]
+    img_w, img_h = Image.open(image_path).size   # ORIGINAL dims (reference convention)
     return parse_boxes_from_ids(ids, img_w, img_h), (img_w, img_h)
 
 
@@ -234,7 +234,7 @@ def main():
         img, prompt, mode = c["image"], c["prompt"], c["mode"]
         name = Path(img).name
         try:
-            up, (gw, gh) = upstream_boxes(bundle, img, prompt, mode, args.max_new)
+            up, (iw, ih) = upstream_boxes(bundle, img, prompt, mode, args.max_new)
             cp = cpp_boxes(args.cli, args.gguf, img, prompt, mode)
         except Exception as e:
             print(f"[{idx}] {name:24s} {mode:6s} ERROR: {e}")
@@ -248,7 +248,7 @@ def main():
         tag = "OK " if ok else "DIFF"
         print(f"[{idx}] {name:24s} {mode:6s} {tag}  up={len(up)} cpp={len(cp)} "
               f"matched={len(matched)} unmatched(up/cpp)={un_up}/{un_cp} "
-              f"minIoU={min_iou:.3f} maxCoordDiff={max_cd:.1f}px  grid={gw}x{gh}")
+              f"minIoU={min_iou:.3f} maxCoordDiff={max_cd:.1f}px  img={iw}x{ih}")
         if not ok:
             up_s = [(l, [round(x, 1) for x in b]) for l, b in up]
             cp_s = [(l, [round(x, 1) for x in b]) for l, b in cp]

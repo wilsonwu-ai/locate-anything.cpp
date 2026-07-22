@@ -1,9 +1,20 @@
 #include "engine.hpp"
+#include "image_io.hpp"
 #include "parity.hpp"
 #include <cstdlib>
 #include <vector>
 #include <cstdio>
 #include <cmath>
+
+// Boxes denormalize against the ORIGINAL image dims (reference convention).
+// Regression guard: they were previously projected onto the 28px-padded
+// preprocess canvas and could overshoot the image on non-aligned inputs.
+static int boxes_within(const std::vector<la::Box>& bs, float w, float h){
+    int ok = 1;
+    for(const auto& b : bs)
+        ok &= (b.x1>=-0.5f && b.y1>=-0.5f && b.x2<=w+0.5f && b.y2<=h+0.5f);
+    return ok;
+}
 int main(){
     const char* gguf=std::getenv("LA_TEST_GGUF"); const char* slow=std::getenv("LA_TEST_SLOW");
     if(!gguf||!slow){std::fprintf(stderr,"skip\n");return 77;}
@@ -23,6 +34,7 @@ int main(){
         std::printf("  box[%d] %s [%.1f %.1f %.1f %.1f] ref [%.1f %.1f %.1f %.1f]\n",
                     k, boxes[k].label.c_str(), boxes[k].x1,boxes[k].y1,boxes[k].x2,boxes[k].y2, r[0],r[1],r[2],r[3]);
     }
+    ok &= boxes_within(boxes, 448.f, 448.f);
 
     // Variable-grid (non-448) box gate on bus.jpg. The reference boxes + labels live
     // in reference_preproc.gguf (slow_boxes / la_preproc.box_labels). JPEG-decode noise
@@ -60,6 +72,9 @@ int main(){
         } else {
             std::printf("bus.jpg: no reference boxes in LA_TEST_PREPROC; smoke only (%zu boxes)\n", bb.size());
         }
+        la::Image bimg;
+        if(la::load_image_rgb(bpath.empty()?std::string(bus):bpath, bimg))
+            bok &= boxes_within(bb, (float)bimg.w, (float)bimg.h);
     } else {
         std::printf("bus.jpg: skip (LA_TEST_PREPROC unset or image missing)\n");
     }

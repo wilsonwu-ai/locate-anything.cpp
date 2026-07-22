@@ -30,8 +30,10 @@ def main():
     ids = tok(s, add_special_tokens=False)["input_ids"]
     assert tok.decode(ids, skip_special_tokens=False) == s, "id round-trip mismatch"
     ids = np.array(ids, dtype=np.int64)
-    grid = inputs["image_grid_hws"][0].tolist()      # [h_patches, w_patches]
-    img_h, img_w = grid[0]*14, grid[1]*14            # patches * patch_size
+    from PIL import Image
+    # ORIGINAL image dims — the reference denormalizes <0>..<1000> against
+    # image.size, not the 28px-padded preprocess canvas (grid*14).
+    img_w, img_h = Image.open(ROOT / spec["image"]).size
     boxes, labels = [], []
     i, n, cur_label = 0, len(ids), ""
     while i < n:

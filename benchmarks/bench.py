@@ -76,8 +76,8 @@ def upstream_time(bundle, image, prompt, mode, max_new=256):
                                tokenizer=tok, max_new_tokens=max_new, generation_mode=mode, use_cache=True)
     dt = time.time() - t0
     ids = tok(s, add_special_tokens=False)["input_ids"]
-    grid = inputs["image_grid_hws"][0].tolist()
-    boxes = parse_boxes_from_ids(ids, grid[1]*14, grid[0]*14)
+    from PIL import Image
+    boxes = parse_boxes_from_ids(ids, *Image.open(image).size)  # ORIGINAL dims (reference convention)
     return dt, boxes
 
 
